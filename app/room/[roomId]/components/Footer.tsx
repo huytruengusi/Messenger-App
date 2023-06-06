@@ -12,6 +12,7 @@ interface FooterProps {
   cameraActive: boolean;
   toggleMic: () => void;
   toggleCamera: () => void;
+  leaveRoom: () => void;
 }
 
 const Footer: React.FC<FooterProps> = ({
@@ -19,6 +20,7 @@ const Footer: React.FC<FooterProps> = ({
   cameraActive,
   toggleMic,
   toggleCamera,
+  leaveRoom,
 }) => {
   return (
     <div className="backdrop-opacity-10 fixed bottom-5 left-1/3">
@@ -51,7 +53,9 @@ const Footer: React.FC<FooterProps> = ({
             <FaMicrophoneSlash size={32} className="text-white" />
           </div>
         )}
-        <div className="bg-red-500 p-3 mx-7 cursor-pointer rounded-full">
+        <div
+          className="bg-red-500 p-3 mx-7 cursor-pointer rounded-full"
+          onClick={() => leaveRoom()}>
           <HiPhoneXMark size={32} className="text-white" />
         </div>
       </div>

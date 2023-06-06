@@ -1,8 +1,7 @@
 import getConversationById from "@/app/actions/getConversationById";
 
 import Header from "./components/Header";
-import Body from "./components/Body";
-
+import Room from "./components/Room";
 interface IParams {
   roomId: string;
 }
@@ -12,8 +11,7 @@ const RoomId = async ({ params }: { params: IParams }) => {
 
   return (
     <div className="h-full w-full">
-      <Header conversation={conversation!} />
-      <Body roomId={params.roomId} />
+      <Room roomId={params.roomId} conversation={conversation!} />
     </div>
   );
 };

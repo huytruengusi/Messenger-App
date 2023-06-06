@@ -1,13 +1,18 @@
 "use client";
 
+import { Conversation, User } from "@prisma/client";
 import { useEffect, useRef, useMemo, useState } from "react";
 import Footer from "./Footer";
 import Pusher, { Members, PresenceChannel } from "pusher-js";
 import { pusherClient } from "@/app/libs/pusher";
 import { useRouter } from "next/navigation";
+import Header from "./Header";
 
 interface BodyProps {
   roomId: String;
+  conversation: Conversation & {
+    users: User[];
+  };
 }
 
 const ICE_SERVERS = {
@@ -25,7 +30,7 @@ const ICE_SERVERS = {
   ],
 };
 
-const Body: React.FC<BodyProps> = ({ roomId }) => {
+const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   const [micActive, setMicActive] = useState(true);
   const [cameraActive, setCameraActive] = useState(true);
   const router = useRouter();
@@ -45,7 +50,6 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
     channelRef.current = pusherClient.subscribe(
       `room-${roomId}`
     ) as PresenceChannel;
-    console.log(navigator.mediaDevices.enumerateDevices());
     // when a users subscribe
     handleRoomJoined();
 
@@ -64,6 +68,7 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
     // Khi Client thứ hai nói với Server rằng họ đã sẵn sàng bắt đầu cuộc gọi
     // Điều này xảy ra sau khi Client thứ hai đã lấy phương tiện của họ
     pusherClient.bind("client-ready", () => {
+      console.log("client-join");
       initiateCall();
     });
 
@@ -88,8 +93,6 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
   }, [roomId]);
 
   const handleRoomJoined = async () => {
-    console.log("handleRoomJoined");
-
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
@@ -104,8 +107,16 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
         };
         if (!host.current) {
           // the 2nd peer joining will tell to host they are ready
+          console.log("client-ready");
           channelRef.current!.trigger("client-ready", {});
         }
+        // if (host.current){
+        //   conversation.users.map((user) => {
+        //     pusherClient.trigger(user.email!, "conversation:update", {
+        //       id: roomId,
+        //     });
+        //   });
+        // }
       })
       .catch((err) => {
         /* handle the error */
@@ -220,7 +231,7 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
   };
 
   const leaveRoom = () => {
-    // socketRef.current.emit("leave", roomName); // Let's the server know that user has left the room.
+    channelRef.current?.trigger("leave", {}); // Let's the server know that user has left the room.
 
     if (userVideo.current!.srcObject) {
       (userVideo.current!.srcObject as MediaStream)
@@ -256,9 +267,10 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
 
   return (
     <div>
+      <Header conversation={conversation!} />
       <div className="grid grid-cols-1 h-screen overflow-hidden">
         <video
-          className="w-full h-full object-cover bg-black"
+          className="w-1/4 h-1/4 fixed right-2 bottom-2 object-cover bg-black"
           autoPlay
           ref={userVideo}
           muted
@@ -275,6 +287,7 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
         cameraActive={cameraActive}
         toggleMic={toggleMic}
         toggleCamera={toggleCamera}
+        leaveRoom={leaveRoom}
       />
     </div>
   );
