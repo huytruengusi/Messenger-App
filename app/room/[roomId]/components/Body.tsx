@@ -267,7 +267,7 @@ const Body: React.FC<BodyProps> = ({ roomId }) => {
         <video
           className="w-full h-full object-cover bg-black hidden"
           autoPlay
-          // ref={partnerVideo}
+          ref={partnerVideo}
         />
       </div>
       <Footer
