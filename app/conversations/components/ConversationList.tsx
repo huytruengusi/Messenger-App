@@ -12,7 +12,7 @@ import useConversation from "@/app/hooks/useConversation";
 import { pusherClient } from "@/app/libs/pusher";
 import GroupChatModal from "@/app/components/modals/GroupChatModal";
 import ConversationBox from "./ConversationBox";
-import { FullConversationType } from "@/app/types";
+import { FullConversationType, FullCallType } from "@/app/types";
 import RecipveCallModal from "@/app/components/modals/RecipveCallModal";
 
 interface ConversationListProps {
@@ -26,7 +26,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
   const [items, setItems] = useState(initialItems);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCallOpen, setIsCallOpen] = useState(true);
+  const [isCallOpen, setIsCallOpen] = useState(false);
+  const [otherUser, setOtherUser] = useState<User>();
+  const [roomId, setRoomId] = useState<String>();
 
   const router = useRouter();
   const session = useSession();
@@ -76,20 +78,27 @@ const ConversationList: React.FC<ConversationListProps> = ({
       }
     };
 
+    const recipveCall = (call: FullCallType) => {
+      setOtherUser(call.user);
+      setRoomId(call.id);
+      setIsCallOpen(true);
+    };
+
     pusherClient.bind("conversation:new", newHandler);
     pusherClient.bind("conversation:update", updateHandler);
     pusherClient.bind("conversation:remove", removeHandler);
+    pusherClient.bind("recive-call", recipveCall);
+
     return () => {
       pusherClient.unsubscribe(pusherKey);
-      pusherClient.unbind("conversation:new", newHandler);
-      pusherClient.unbind("conversation:update", updateHandler);
-      pusherClient.unbind("conversation:remove", removeHandler);
     };
   }, [pusherKey, router, conversationId]);
 
   return (
     <>
       <RecipveCallModal
+        user={otherUser!}
+        roomId={roomId!}
         isOpen={isCallOpen}
         onClose={() => setIsCallOpen(false)}
       />

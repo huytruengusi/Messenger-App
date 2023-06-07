@@ -26,6 +26,7 @@ const Form = () => {
     console.log(data);
     axios.post("/api/messages", {
       ...data,
+      isCall: false,
       conversationId,
     });
   };
@@ -33,6 +34,7 @@ const Form = () => {
   const handleUpload = (result: any) => {
     axios.post("/api/messages", {
       image: result.info.secure_url,
+      isCall: false,
       conversationId,
     });
   };

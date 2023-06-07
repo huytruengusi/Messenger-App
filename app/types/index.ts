@@ -9,3 +9,8 @@ export type FullConversationType = Conversation & {
   users: User[];
   messages: FullMessageType[];
 };
+
+export type FullCallType = User & {
+  id: string;
+  user: User;
+};

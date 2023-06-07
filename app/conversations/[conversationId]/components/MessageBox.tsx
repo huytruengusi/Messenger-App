@@ -6,6 +6,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { FullMessageType } from "@/app/types";
+import { HiPhoneArrowUpRight, HiPhoneArrowDownLeft } from "react-icons/hi2";
 
 import Avatar from "@/app/components/Avatar";
 import ImageModal from "./ImageModal";
@@ -53,7 +54,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
             isOpen={imageModalOpen}
             onClose={() => setImageModalOpen(false)}
           />
-          {data.image ? (
+          {data.image && (
             <Image
               alt="Image"
               height="288"
@@ -67,8 +68,23 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
               transition
               translate"
             />
-          ) : (
-            <div>{data.body}</div>
+          )}
+          {data.body && <div>{data.body}</div>}
+          {data.isCall && isOwn && (
+            <div className="flex gap-3">
+              <div className="bg-sky-600 p-1 rounded-full">
+                <HiPhoneArrowUpRight size={10} className="text-white" />
+              </div>
+              Cuộc gọi đi
+            </div>
+          )}
+          {data.isCall && !isOwn && (
+            <div className="flex gap-3">
+              <div className="bg-gray-300 p-1 rounded-full">
+                <HiPhoneArrowDownLeft size={10} className="text-white" />
+              </div>
+              Cuộc gọi đến
+            </div>
           )}
         </div>
         {isLast && isOwn && seenList.length > 0 && (

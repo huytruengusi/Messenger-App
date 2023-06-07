@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
     const body = await request.json();
-    const { message, image, conversationId } = body;
+    const { message, isCall, image, conversationId } = body;
 
     if (!currentUser?.id || !currentUser?.email) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
       data: {
         body: message,
         image: image,
+        isCall: isCall,
         conversation: {
           connect: {
             id: conversationId,
@@ -65,6 +66,15 @@ export async function POST(request: Request) {
     await pusherServer.trigger(conversationId, "messages:new", newMessage);
     const lastMessage =
       updatedConversation.messages[updatedConversation.messages.length - 1];
+
+    if (isCall) {
+      updatedConversation.users.map((user) => {
+        pusherServer.trigger(user.email!, "recive-call", {
+          id: conversationId,
+          user: currentUser,
+        });
+      });
+    }
 
     updatedConversation.users.map((user) => {
       pusherServer.trigger(user.email!, "conversation:update", {

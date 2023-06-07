@@ -5,6 +5,7 @@ import { HiEllipsisHorizontal, HiPhone, HiVideoCamera } from "react-icons/hi2";
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { Conversation, User } from "@prisma/client";
+import axios from "axios";
 
 import useOtherUser from "@/app/hooks/useOtherUser";
 import useActiveList from "@/app/hooks/useActiveList";
@@ -36,6 +37,10 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
   }, [conversation, isActive]);
 
   const handleCall = useCallback(() => {
+    axios.post("/api/messages", {
+      isCall: true,
+      conversationId: conversation.id,
+    });
     router.push(`/room/${conversation.id}`);
   }, [conversation, router]);
 

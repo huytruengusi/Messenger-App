@@ -1,6 +1,5 @@
 import getConversationById from "@/app/actions/getConversationById";
 
-import Header from "./components/Header";
 import Room from "./components/Room";
 interface IParams {
   roomId: string;

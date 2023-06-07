@@ -231,7 +231,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   };
 
   const leaveRoom = () => {
-    channelRef.current?.trigger("leave", {}); // Let's the server know that user has left the room.
+    // channelRef.current?.trigger("leave", {}); // Let's the server know that user has left the room.
 
     if (userVideo.current!.srcObject) {
       (userVideo.current!.srcObject as MediaStream)
@@ -252,7 +252,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       rtcConnection.current = null;
     }
 
-    router.push("/conversations");
+    router.push(`/conversations/${roomId}`);
   };
 
   const toggleMic = () => {
