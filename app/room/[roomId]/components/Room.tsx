@@ -3,10 +3,11 @@
 import { Conversation, User } from "@prisma/client";
 import { useEffect, useRef, useMemo, useState } from "react";
 import Footer from "./Footer";
-import Pusher, { Members, PresenceChannel } from "pusher-js";
+import { Members, PresenceChannel } from "pusher-js";
 import { pusherClient } from "@/app/libs/pusher";
 import { useRouter } from "next/navigation";
 import Header from "./Header";
+import useActiveList from "@/app/hooks/useActiveList";
 
 interface BodyProps {
   roomId: String;
@@ -31,6 +32,7 @@ const ICE_SERVERS = {
 };
 
 const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
+  const { set, add, remove } = useActiveList();
   const [micActive, setMicActive] = useState(true);
   const [cameraActive, setCameraActive] = useState(true);
   const router = useRouter();
@@ -47,52 +49,70 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   const partnerVideo = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    channelRef.current = pusherClient.subscribe(
-      `room-${roomId}`
-    ) as PresenceChannel;
+    let channel = channelRef.current;
+    if (!channel) {
+      channel = pusherClient.subscribe(`presence-${roomId}`) as PresenceChannel;
+      channelRef.current = channel;
+    }
     // when a users subscribe
-    handleRoomJoined();
 
-    // when a member leaves the chat
-    pusherClient.bind("pusher:member_removed", () => {
-      handlePeerLeaving();
-    });
-
-    pusherClient.bind("client-offer", (offer: RTCSessionDescriptionInit) => {
-      // offer is sent by the host, so only non-host should handle it
-      if (!host.current) {
-        handleReceivedOffer(offer);
+    channel.bind("pusher:subscription_succeeded", (members: Members) => {
+      if (members.count === 1) {
+        // when subscribing, if you are the first member, you are the host
+        host.current = true;
       }
+      handleRoomJoined();
     });
 
-    // Khi Client thứ hai nói với Server rằng họ đã sẵn sàng bắt đầu cuộc gọi
-    // Điều này xảy ra sau khi Client thứ hai đã lấy phương tiện của họ
-    pusherClient.bind("client-ready", () => {
-      console.log("client-join");
+    channel.bind("pusher:member_added", (member: Record<string, any>) => {
       initiateCall();
     });
 
-    pusherClient.bind("client-answer", (answer: RTCSessionDescriptionInit) => {
-      // Trả lời được gửi đi từ người không lập phòng nên người lập phòng phải xử lý sự kiện này
-      if (host.current) {
-        handleAnswerReceived(answer as RTCSessionDescriptionInit);
-      }
+    // when a member leaves the chat
+    channelRef.current?.bind("pusher:member_removed", () => {
+      handlePeerLeaving();
     });
 
-    pusherClient.bind(
+    channelRef.current?.bind(
+      "client-offer",
+      (offer: RTCSessionDescriptionInit) => {
+        // offer is sent by the host, so only non-host should handle it
+        if (!host.current) {
+          handleReceivedOffer(offer);
+        }
+      }
+    );
+
+    // When the second peer tells host they are ready to start the call
+    // This happens after the second peer has grabbed their media
+    channelRef.current?.bind("client-ready", () => {
+      initiateCall();
+    });
+
+    channelRef.current?.bind(
+      "client-answer",
+      (answer: RTCSessionDescriptionInit) => {
+        // answer is sent by non-host, so only host should handle it
+        if (host.current) {
+          handleAnswerReceived(answer as RTCSessionDescriptionInit);
+        }
+      }
+    );
+
+    channelRef.current?.bind(
       "client-ice-candidate",
       (iceCandidate: RTCIceCandidate) => {
-        // Trả lời được gửi đi từ người không lập phòng nên người lập phòng phải xử lý sự kiện này
+        // answer is sent by non-host, so only host should handle it
         handlerNewIceCandidateMsg(iceCandidate);
       }
     );
 
     return () => {
-      pusherClient.unsubscribe(`room-${roomId}`);
+      pusherClient.unsubscribe(`presence-${roomId}`);
     };
   }, [roomId]);
 
-  const handleRoomJoined = async () => {
+  const handleRoomJoined = () => {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
@@ -107,16 +127,8 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
         };
         if (!host.current) {
           // the 2nd peer joining will tell to host they are ready
-          console.log("client-ready");
           channelRef.current!.trigger("client-ready", {});
         }
-        // if (host.current){
-        //   conversation.users.map((user) => {
-        //     pusherClient.trigger(user.email!, "conversation:update", {
-        //       id: roomId,
-        //     });
-        //   });
-        // }
       })
       .catch((err) => {
         /* handle the error */
@@ -126,7 +138,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
 
   const createPeerConnection = () => {
     console.log("createPeerConnection");
-
     // We create a RTC Peer Connection
     const connection = new RTCPeerConnection(ICE_SERVERS);
 
@@ -163,6 +174,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   };
 
   const handleReceivedOffer = (offer: RTCSessionDescriptionInit) => {
+    console.log("handleReceivedOffer");
     rtcConnection.current = createPeerConnection();
     userStream.current?.getTracks().forEach((track) => {
       // Adding tracks to the RTCPeerConnection to give peer access to it
@@ -229,9 +241,8 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       rtcConnection.current = null;
     }
   };
-
   const leaveRoom = () => {
-    // channelRef.current?.trigger("leave", {}); // Let's the server know that user has left the room.
+    // socketRef.current.emit('leave', roomName); // Let's the server know that user has left the room.
 
     if (userVideo.current!.srcObject) {
       (userVideo.current!.srcObject as MediaStream)
@@ -277,7 +288,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
         />
 
         <video
-          className="w-full h-full object-cover bg-black hidden"
+          className="w-full h-full object-cover bg-black"
           autoPlay
           ref={partnerVideo}
         />
