@@ -36,15 +36,21 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
     return isActive ? "Đang hoạt động" : "Ngoại tuyến";
   }, [conversation, isActive]);
 
-  const handleCall = useCallback(() => {
+  // const handleCall = useCallback(() => {
+  //   axios.post("/api/messages", {
+  //     isCall: true,
+  //     conversationId: conversation.id,
+  //   });
+  //   router.push(`/room/${conversation.id}`);
+  // }, [conversation, router]);
+
+  const handleVideoCall = useCallback(() => {
     axios.post("/api/messages", {
       isCall: true,
       conversationId: conversation.id,
     });
     router.push(`/room/${conversation.id}`);
   }, [conversation, router]);
-
-  const handleVideoCall = () => {};
 
   return (
     <>
@@ -92,22 +98,24 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
           </div>
         </div>
         <div className="flex gap-4">
-          <HiPhone
+          {/* <HiPhone
             size={32}
             onClick={() => handleCall()}
             className="text-sky-500
             cursor-pointer
             hover:text-sky-600
             transition"
-          />
-          <HiVideoCamera
-            size={32}
-            onClick={() => handleVideoCall()}
-            className="text-sky-500
-            cursor-pointer
-            hover:text-sky-600
-            transition"
-          />
+          /> */}
+          {!conversation.isGroup && (
+            <HiVideoCamera
+              size={32}
+              onClick={() => handleVideoCall()}
+              className="text-sky-500
+              cursor-pointer
+              hover:text-sky-600
+              transition"
+            />
+          )}
           <HiEllipsisHorizontal
             size={32}
             onClick={() => setDrawerOpen(true)}

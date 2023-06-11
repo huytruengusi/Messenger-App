@@ -32,7 +32,6 @@ const ICE_SERVERS = {
 };
 
 const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
-  const { set, add, remove } = useActiveList();
   const [micActive, setMicActive] = useState(true);
   const [cameraActive, setCameraActive] = useState(true);
   const router = useRouter();
@@ -47,6 +46,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
 
   const userVideo = useRef<HTMLVideoElement>(null);
   const partnerVideo = useRef<HTMLVideoElement>(null);
+  const [isConnect, setIsConnect] = useState(false);
 
   useEffect(() => {
     let channel = channelRef.current;
@@ -63,14 +63,9 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       }
       handleRoomJoined();
     });
-
-    channel.bind("pusher:member_added", (member: Record<string, any>) => {
-      initiateCall();
-    });
-
     // when a member leaves the chat
     channelRef.current?.bind("pusher:member_removed", () => {
-      handlePeerLeaving();
+      leaveRoom();
     });
 
     channelRef.current?.bind(
@@ -137,7 +132,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   };
 
   const createPeerConnection = () => {
-    console.log("createPeerConnection");
     // We create a RTC Peer Connection
     const connection = new RTCPeerConnection(ICE_SERVERS);
 
@@ -151,7 +145,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   };
 
   const initiateCall = () => {
-    console.log("initiateCall");
     if (host.current) {
       rtcConnection.current = createPeerConnection();
       // Host creates offer
@@ -174,7 +167,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   };
 
   const handleReceivedOffer = (offer: RTCSessionDescriptionInit) => {
-    console.log("handleReceivedOffer");
     rtcConnection.current = createPeerConnection();
     userStream.current?.getTracks().forEach((track) => {
       // Adding tracks to the RTCPeerConnection to give peer access to it
@@ -215,6 +207,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
 
   const handleTrackEvent = (event: RTCTrackEvent) => {
     partnerVideo.current!.srcObject = event.streams[0];
+    setIsConnect(true);
   };
 
   const toggleMediaStream = (type: "video" | "audio", state: boolean) => {
@@ -225,22 +218,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
     });
   };
 
-  const handlePeerLeaving = () => {
-    host.current = true;
-    if (partnerVideo.current?.srcObject) {
-      (partnerVideo.current.srcObject as MediaStream)
-        .getTracks()
-        .forEach((track) => track.stop()); // Stops receiving all track of Peer.
-    }
-
-    // Safely closes the existing connection established with the peer who left.
-    if (rtcConnection.current) {
-      rtcConnection.current.ontrack = null;
-      rtcConnection.current.onicecandidate = null;
-      rtcConnection.current.close();
-      rtcConnection.current = null;
-    }
-  };
   const leaveRoom = () => {
     // socketRef.current.emit('leave', roomName); // Let's the server know that user has left the room.
 
@@ -286,12 +263,22 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
           ref={userVideo}
           muted
         />
-
         <video
           className="w-full h-full object-cover bg-black"
           autoPlay
           ref={partnerVideo}
         />
+        {/* {isConnect ? (
+          <video
+            className="w-full h-full object-cover bg-black"
+            autoPlay
+            ref={partnerVideo}
+          />
+        ) : (
+          <div className="w-full h-full bg-black text-white flex justify-center items-center h-screen text-3xl">
+            Đang đợi đối phương vào cuộc trò chuyện....
+          </div>
+        )} */}
       </div>
       <Footer
         micActive={micActive}

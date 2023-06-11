@@ -55,6 +55,10 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
       return "Đã gửi một hình ảnh.";
     }
 
+    if (lastMessage?.isCall) {
+      return "Cuộc trò chuyện bằng video";
+    }
+
     if (lastMessage?.body) {
       return lastMessage?.body;
     }

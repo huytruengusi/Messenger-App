@@ -25,28 +25,26 @@ const Footer: React.FC<FooterProps> = ({
   return (
     <div className="backdrop-opacity-10 fixed bottom-5 left-1/3">
       <div className=" flex gap-12">
-        {cameraActive && (
+        {cameraActive ? (
           <div
             className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
             onClick={() => toggleCamera()}>
             <HiVideoCamera size={32} className="text-white" />
           </div>
-        )}
-        {!cameraActive && (
+        ) : (
           <div
             className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
             onClick={() => toggleCamera()}>
             <HiVideoCameraSlash size={32} className="text-white" />
           </div>
         )}
-        {micActive && (
+        {micActive ? (
           <div
             className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
             onClick={() => toggleMic()}>
             <FaMicrophone size={32} className="text-white" />
           </div>
-        )}
-        {!micActive && (
+        ) : (
           <div
             className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
             onClick={() => toggleMic()}>
