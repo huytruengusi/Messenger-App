@@ -110,8 +110,10 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   const handleRoomJoined = () => {
     navigator.mediaDevices
       .getUserMedia({
-        audio: true,
-        video: { width: 1280, height: 720 },
+        video: {
+          width: { min: 640, ideal: 1920, max: 1920 },
+          height: { min: 480, ideal: 1080, max: 1080 },
+        },
       })
       .then((stream) => {
         /* store reference to the stream and provide it to the video element */
@@ -258,27 +260,17 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       <Header conversation={conversation!} />
       <div className="grid grid-cols-1 h-screen overflow-hidden">
         <video
-          className="md:w-1/4 md:h-1/4 w-1/3 h-1/3 fixed right-2 bottom-2 object-cover bg-black rounded-md"
+          className="w-1/4 h-1/4 fixed right-2 bottom-2 object-cover bg-black rounded-md"
           autoPlay
+          playsInline
           ref={userVideo}
-          muted
         />
         <video
           className="w-full h-full object-cover bg-black"
           autoPlay
+          playsInline
           ref={partnerVideo}
         />
-        {/* {isConnect ? (
-          <video
-            className="w-full h-full object-cover bg-black"
-            autoPlay
-            ref={partnerVideo}
-          />
-        ) : (
-          <div className="w-full h-full bg-black text-white flex justify-center items-center h-screen text-3xl">
-            Đang đợi đối phương vào cuộc trò chuyện....
-          </div>
-        )} */}
       </div>
       <Footer
         micActive={micActive}
