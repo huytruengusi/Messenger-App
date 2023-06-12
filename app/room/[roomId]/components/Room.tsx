@@ -258,7 +258,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       <Header conversation={conversation!} />
       <div className="grid grid-cols-1 h-screen overflow-hidden">
         <video
-          className="w-1/4 h-1/4 fixed right-2 bottom-2 object-cover bg-black"
+          className="md:w-1/4 md:h-1/4 w-1/3 h-1/3 fixed right-2 bottom-2 object-cover bg-black rounded-md"
           autoPlay
           ref={userVideo}
           muted

@@ -23,38 +23,38 @@ const Footer: React.FC<FooterProps> = ({
   leaveRoom,
 }) => {
   return (
-    <div className="backdrop-opacity-10 fixed bottom-5 left-1/3">
-      <div className=" flex gap-12">
+    <div className="backdrop-opacity-10 fixed bottom-5 inset-x-2/4">
+      <div className="flex justify-evenly gap-12">
         {cameraActive ? (
           <div
-            className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
+            className="bg-purple-500 p-3 cursor-pointer rounded-full"
             onClick={() => toggleCamera()}>
-            <HiVideoCamera size={32} className="text-white" />
+            <HiVideoCamera size={24} className="text-white" />
           </div>
         ) : (
           <div
-            className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
+            className="bg-purple-500 p-3 cursor-pointer rounded-full"
             onClick={() => toggleCamera()}>
-            <HiVideoCameraSlash size={32} className="text-white" />
+            <HiVideoCameraSlash size={24} className="text-white" />
           </div>
         )}
         {micActive ? (
           <div
-            className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
+            className="bg-purple-500 p-3 cursor-pointer rounded-full"
             onClick={() => toggleMic()}>
-            <FaMicrophone size={32} className="text-white" />
+            <FaMicrophone size={24} className="text-white" />
           </div>
         ) : (
           <div
-            className="bg-purple-500 p-3 mx-7 cursor-pointer rounded-full"
+            className="bg-purple-500 p-3 cursor-pointer rounded-full"
             onClick={() => toggleMic()}>
-            <FaMicrophoneSlash size={32} className="text-white" />
+            <FaMicrophoneSlash size={24} className="text-white" />
           </div>
         )}
         <div
-          className="bg-red-500 p-3 mx-7 cursor-pointer rounded-full"
+          className="bg-red-500 p-3 cursor-pointer rounded-full"
           onClick={() => leaveRoom()}>
-          <HiPhoneXMark size={32} className="text-white" />
+          <HiPhoneXMark size={24} className="text-white" />
         </div>
       </div>
     </div>
