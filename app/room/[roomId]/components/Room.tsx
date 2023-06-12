@@ -46,7 +46,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
 
   const userVideo = useRef<HTMLVideoElement>(null);
   const partnerVideo = useRef<HTMLVideoElement>(null);
-  const [isConnect, setIsConnect] = useState(false);
 
   useEffect(() => {
     let channel = channelRef.current;
@@ -209,7 +208,6 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
 
   const handleTrackEvent = (event: RTCTrackEvent) => {
     partnerVideo.current!.srcObject = event.streams[0];
-    setIsConnect(true);
   };
 
   const toggleMediaStream = (type: "video" | "audio", state: boolean) => {
