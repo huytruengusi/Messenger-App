@@ -23,7 +23,7 @@ const Footer: React.FC<FooterProps> = ({
   leaveRoom,
 }) => {
   return (
-    <div className="backdrop-opacity-10 fixed bottom-5 inset-x-2/4">
+    <div className="backdrop-opacity-10 fixed z-40 bottom-5 inset-x-2/4">
       <div className="flex justify-evenly gap-12">
         {cameraActive ? (
           <div
