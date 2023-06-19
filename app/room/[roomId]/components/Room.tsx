@@ -7,12 +7,10 @@ import { Members, PresenceChannel } from "pusher-js";
 import { pusherClient } from "@/app/libs/pusher";
 import { useRouter } from "next/navigation";
 import Header from "./Header";
-import clsx from "clsx";
-import Avatar from "@/app/components/Avatar";
-import useOtherUser from "@/app/hooks/useOtherUser";
+import useActiveList from "@/app/hooks/useActiveList";
+
 interface BodyProps {
   roomId: String;
-  user: User;
   conversation: Conversation & {
     users: User[];
   };
@@ -33,12 +31,10 @@ const ICE_SERVERS = {
   ],
 };
 
-const Body: React.FC<BodyProps> = ({ roomId, user, conversation }) => {
+const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   const [micActive, setMicActive] = useState(true);
   const [cameraActive, setCameraActive] = useState(true);
-  const [partnerCameraActive, setPartnerCameraActive] = useState(false);
   const router = useRouter();
-  const otherUser = useOtherUser(conversation);
 
   const host = useRef(false);
   // Pusher specific refs
@@ -63,8 +59,6 @@ const Body: React.FC<BodyProps> = ({ roomId, user, conversation }) => {
       if (members.count === 1) {
         // when subscribing, if you are the first member, you are the host
         host.current = true;
-      } else {
-        setPartnerCameraActive(true);
       }
       handleRoomJoined();
     });
@@ -94,14 +88,10 @@ const Body: React.FC<BodyProps> = ({ roomId, user, conversation }) => {
       (answer: RTCSessionDescriptionInit) => {
         // answer is sent by non-host, so only host should handle it
         if (host.current) {
-          setPartnerCameraActive(true);
           handleAnswerReceived(answer as RTCSessionDescriptionInit);
         }
       }
     );
-    channelRef.current?.bind("client-camera", () => {
-      setPartnerCameraActive((prev) => !prev);
-    });
 
     channelRef.current?.bind(
       "client-ice-candidate",
@@ -260,7 +250,6 @@ const Body: React.FC<BodyProps> = ({ roomId, user, conversation }) => {
 
   const toggleCamera = () => {
     toggleMediaStream("video", cameraActive);
-    channelRef.current?.trigger("client-camera", {});
     setCameraActive((prev) => !prev);
   };
 
@@ -269,47 +258,17 @@ const Body: React.FC<BodyProps> = ({ roomId, user, conversation }) => {
       <Header conversation={conversation!} />
       <div className="grid grid-cols-1 h-screen overflow-hidden">
         <video
-          className={clsx(
-            `w-1/4 
-            h-1/4 
-            object-cover 
-            rounded-md 
-            fixed 
-            right-2 
-            bottom-2 
-            z-40
-            `,
-            !cameraActive && "hidden"
-          )}
+          className="w-1/4 h-1/4 fixed right-2 bottom-2 object-cover bg-black rounded-md"
           autoPlay
           playsInline
           ref={userVideo}
         />
-        <div className="w-1/4 h-1/4 object-cover rounded-md fixed right-2 bottom-2 z-30 bg-black">
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Avatar user={user} />
-          </div>
-        </div>
         <video
-          className={clsx(
-            `w-full
-            h-full 
-            object-cover 
-            rounded-md 
-            fixed
-            z-20
-            `,
-            !partnerCameraActive && "hidden"
-          )}
+          className="w-full h-full object-cover bg-black"
           autoPlay
           playsInline
           ref={partnerVideo}
         />
-        <div className="w-full h-full object-cover rounded-md fixed right-2 bottom-2 z-10 bg-black">
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Avatar user={otherUser} />
-          </div>
-        </div>
       </div>
       <Footer
         micActive={micActive}

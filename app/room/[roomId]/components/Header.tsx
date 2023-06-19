@@ -35,7 +35,6 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
             fixed
             w-full
             flex
-            z-40
             sm:px-4
             py-3
             px-4
