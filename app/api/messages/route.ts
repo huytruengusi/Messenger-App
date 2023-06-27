@@ -69,10 +69,12 @@ export async function POST(request: Request) {
 
     if (isCall) {
       updatedConversation.users.map((user) => {
-        pusherServer.trigger(user.email!, "recive-call", {
-          id: conversationId,
-          user: currentUser,
-        });
+        if (user.email !== currentUser.email) {
+          pusherServer.trigger(user.email!, "recive-call", {
+            id: conversationId,
+            user: currentUser,
+          });
+        }
       });
     }
 

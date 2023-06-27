@@ -33,7 +33,7 @@ const UserList: React.FC<UserListProps> = ({ items }) => {
                     font-bold
                     text-neutral-800
                     py-4">
-            People
+            Mọi người
           </div>
         </div>
         {items.map((item) => (

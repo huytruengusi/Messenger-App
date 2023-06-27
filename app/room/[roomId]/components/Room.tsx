@@ -7,10 +7,13 @@ import { Members, PresenceChannel } from "pusher-js";
 import { pusherClient } from "@/app/libs/pusher";
 import { useRouter } from "next/navigation";
 import Header from "./Header";
-import useActiveList from "@/app/hooks/useActiveList";
+import clsx from "clsx";
+import Avatar from "@/app/components/Avatar";
+import useOtherUser from "@/app/hooks/useOtherUser";
 
 interface BodyProps {
   roomId: String;
+  user: User;
   conversation: Conversation & {
     users: User[];
   };
@@ -31,9 +34,11 @@ const ICE_SERVERS = {
   ],
 };
 
-const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
+const Body: React.FC<BodyProps> = ({ roomId, user, conversation }) => {
   const [micActive, setMicActive] = useState(true);
   const [cameraActive, setCameraActive] = useState(true);
+  const otherUser = useOtherUser(conversation);
+
   const router = useRouter();
 
   const host = useRef(false);
@@ -48,26 +53,28 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   const partnerVideo = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    let channel = channelRef.current;
-    if (!channel) {
-      channel = pusherClient.subscribe(`presence-${roomId}`) as PresenceChannel;
-      channelRef.current = channel;
-    }
-    // when a users subscribe
+    channelRef.current = pusherClient.subscribe(
+      `presence-${roomId}`
+    ) as PresenceChannel;
 
-    channel.bind("pusher:subscription_succeeded", (members: Members) => {
-      if (members.count === 1) {
-        // when subscribing, if you are the first member, you are the host
-        host.current = true;
+    // when a users subscribe
+    channelRef.current.bind(
+      "pusher:subscription_succeeded",
+      (members: Members) => {
+        if (members.count === 1) {
+          // when subscribing, if you are the first member, you are the host
+          host.current = true;
+        }
+        handleRoomJoined();
       }
-      handleRoomJoined();
-    });
+    );
+
     // when a member leaves the chat
-    channelRef.current?.bind("pusher:member_removed", () => {
+    channelRef.current.bind("pusher:member_removed", () => {
       leaveRoom();
     });
 
-    channelRef.current?.bind(
+    channelRef.current.bind(
       "client-offer",
       (offer: RTCSessionDescriptionInit) => {
         // offer is sent by the host, so only non-host should handle it
@@ -79,11 +86,11 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
 
     // When the second peer tells host they are ready to start the call
     // This happens after the second peer has grabbed their media
-    channelRef.current?.bind("client-ready", () => {
+    channelRef.current.bind("client-ready", () => {
       initiateCall();
     });
 
-    channelRef.current?.bind(
+    channelRef.current.bind(
       "client-answer",
       (answer: RTCSessionDescriptionInit) => {
         // answer is sent by non-host, so only host should handle it
@@ -93,7 +100,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       }
     );
 
-    channelRef.current?.bind(
+    channelRef.current.bind(
       "client-ice-candidate",
       (iceCandidate: RTCIceCandidate) => {
         // answer is sent by non-host, so only host should handle it
@@ -109,10 +116,8 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
   const handleRoomJoined = () => {
     navigator.mediaDevices
       .getUserMedia({
-        video: {
-          width: { min: 640, ideal: 1920, max: 1920 },
-          height: { min: 480, ideal: 1080, max: 1080 },
-        },
+        audio: true,
+        video: { width: 1280, height: 720 },
       })
       .then((stream) => {
         /* store reference to the stream and provide it to the video element */
@@ -185,6 +190,7 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
         console.log(error);
       });
   };
+
   const handleAnswerReceived = (answer: RTCSessionDescriptionInit) => {
     rtcConnection
       .current!.setRemoteDescription(answer)
@@ -258,13 +264,40 @@ const Body: React.FC<BodyProps> = ({ roomId, conversation }) => {
       <Header conversation={conversation!} />
       <div className="grid grid-cols-1 h-screen overflow-hidden">
         <video
-          className="w-1/4 h-1/4 fixed right-2 bottom-2 object-cover bg-black rounded-md"
+          className={clsx(
+            `w-1/4 
+            h-1/4  
+            rounded-md 
+            fixed 
+            right-2 
+            bottom-2
+            z-10
+            `,
+            !cameraActive && "hidden"
+          )}
+          muted
           autoPlay
           playsInline
           ref={userVideo}
         />
+        <div
+          className={clsx(
+            `w-1/4 
+            h-1/4 
+            rounded-md 
+            fixed
+            right-2 
+            bottom-2
+            bg-black
+            `,
+            cameraActive && "hidden"
+          )}>
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <Avatar user={user} />
+          </div>
+        </div>
         <video
-          className="w-full h-full object-cover bg-black"
+          className="w-full h-full bg-black"
           autoPlay
           playsInline
           ref={partnerVideo}
